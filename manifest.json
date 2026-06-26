@@ -2,7 +2,7 @@
   "name": "Spark Repair Estimator",
   "short_name": "Estimator",
   "description": "On-site repair cost estimator for Spark Equity Group renovation projects",
-  "start_url": "./index.html",
+  "start_url": "./",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",

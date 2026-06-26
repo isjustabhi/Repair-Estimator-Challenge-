@@ -17,18 +17,111 @@
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
   <style>
+    :root {
+      --orange: #ea580c;
+      --orange-light: #fff7ed;
+      --ink: #111827;
+      --safe-b: env(safe-area-inset-bottom, 0px);
+      --safe-t: env(safe-area-inset-top, 0px);
+    }
     * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
     html, body { height: 100%; overscroll-behavior: none; }
-    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f1f5f9; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #e2e8f0;
+      color: var(--ink);
+    }
+    input, select, textarea, button { font: inherit; }
     input[type=number]::-webkit-inner-spin-button,
     input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     input[type=number] { -moz-appearance: textfield; }
-    .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+    .mobile-input { font-size: 16px !important; min-height: 48px; }
+    .scroll-x { overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-snap-type: x proximity; }
     .scroll-x::-webkit-scrollbar { display: none; }
     .scroll-y { overflow-y: auto; -webkit-overflow-scrolling: touch; }
-    .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
-    .pt-safe { padding-top: max(0px, env(safe-area-inset-top)); }
-    #side-panel { transition: transform 0.28s cubic-bezier(.4,0,.2,1); }
+    .safe-bottom { padding-bottom: max(16px, var(--safe-b)); }
+    .pt-safe { padding-top: max(8px, var(--safe-t)); }
+    #side-panel { transition: transform 0.28s cubic-bezier(.4,0,.2,1); width: min(100vw, 20rem); }
+    #app { max-width: 520px; margin: 0 auto; min-height: 100%; background: #f1f5f9; box-shadow: 0 0 0 1px rgba(0,0,0,.04); }
+
+    /* Toolbar + brand */
+    .app-toolbar { display: grid; grid-template-columns: 48px 1fr 96px; align-items: center; gap: 2px; min-height: 52px; }
+    .app-toolbar-side { display: flex; align-items: center; justify-content: flex-end; }
+    .app-brand { display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 0; text-align: center; }
+    .app-brand-title { color: #fff; font-weight: 800; font-size: 1rem; line-height: 1.15; letter-spacing: -0.02em; text-shadow: 0 1px 4px rgba(0,0,0,.5); }
+    .app-brand-sub {
+      margin-top: 4px; display: inline-block; padding: 3px 12px; border-radius: 9999px;
+      background: linear-gradient(135deg, #ea580c, #f97316); color: #fff;
+      font-weight: 800; font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase;
+      box-shadow: 0 2px 10px rgba(234,88,12,.45);
+    }
+    .touch-target { min-width: 48px; min-height: 48px; display: inline-flex; align-items: center; justify-content: center; border-radius: 12px; }
+    .touch-target:active { background: rgba(255,255,255,.08); }
+
+    /* Header hero */
+    .hero-total { background: linear-gradient(180deg, #111827 0%, #1f2937 100%); }
+    .hero-card {
+      margin: 0 12px 12px; padding: 14px 16px; border-radius: 16px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    }
+    .hero-amount { font-size: clamp(2.25rem, 9vw, 3rem); font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+
+    /* Category pills */
+    .cat-pills { padding: 10px 12px; gap: 8px; background: #fff; border-bottom: 1px solid #e5e7eb; position: sticky; top: 0; z-index: 20; }
+    .cat-pill {
+      flex: none; scroll-snap-align: start; padding: 10px 14px; border-radius: 9999px;
+      font-size: 0.8125rem; font-weight: 600; white-space: nowrap; border: 2px solid transparent;
+      background: #f8fafc; color: #64748b; min-height: 44px;
+    }
+    .cat-pill.active { background: var(--orange-light); color: var(--orange); border-color: #fdba74; }
+    .cat-pill-badge { font-size: 0.65rem; margin-left: 4px; opacity: .85; }
+
+    /* Room chips */
+    .room-chips { padding: 8px 12px; gap: 8px; background: #fff; border-bottom: 1px solid #e5e7eb; }
+    .room-chip {
+      flex: none; display: flex; align-items: center; border-radius: 12px; overflow: hidden;
+      border: 2px solid #e5e7eb; background: #fff; min-height: 44px;
+    }
+    .room-chip.active { border-color: var(--orange); background: var(--orange-light); }
+    .room-chip-btn { padding: 10px 12px; font-size: 0.8125rem; font-weight: 600; color: #475569; }
+    .room-chip.active .room-chip-btn { color: #c2410c; }
+
+    /* Cards */
+    .item-card { border-radius: 16px; margin-bottom: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; }
+    .item-card.checked { box-shadow: 0 0 0 2px #fed7aa; }
+    .check-btn {
+      width: 44px; height: 44px; border-radius: 50%; border: 2px solid #d1d5db;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+      background: #fff; transition: all .15s;
+    }
+    .check-btn.on { background: var(--orange); border-color: var(--orange); }
+    .group-card { border-radius: 16px; margin-bottom: 10px; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; }
+    .group-head { min-height: 56px; padding: 0 16px; width: 100%; display: flex; align-items: center; justify-content: space-between; text-align: left; }
+    .group-head:active { background: #f8fafc; }
+
+    /* Bottom nav */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+      width: min(100%, 520px); background: #fff; border-top: 1px solid #e5e7eb;
+      padding: 10px 12px max(10px, var(--safe-b)); box-shadow: 0 -8px 24px rgba(0,0,0,.08); z-index: 30;
+    }
+    .nav-btn {
+      flex: 1; min-height: 52px; border-radius: 14px; font-weight: 700; font-size: 0.9375rem;
+      display: flex; align-items: center; justify-content: center; gap: 6px;
+    }
+    .nav-btn-primary { background: var(--orange); color: #fff; }
+    .nav-btn-secondary { background: #fff; color: var(--orange); border: 2px solid var(--orange); }
+    .nav-btn:disabled { opacity: .3; }
+
+    .content-pad { padding: 12px 12px 100px; }
+    .section-label { font-size: 0.6875rem; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: #94a3b8; }
+    .add-item-btn {
+      width: 100%; min-height: 48px; border-radius: 14px; border: 2px dashed #fdba74;
+      color: var(--orange); font-weight: 700; font-size: 0.875rem; background: #fff7ed;
+    }
+    .qty-row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 12px; }
+    .qty-field { flex: 1; min-width: 120px; }
   </style>
 </head>
 <body class="bg-slate-100">
@@ -123,7 +216,7 @@
 </div>
 
 <!-- Install banner (outside #app) -->
-<div id="install-banner" class="fixed bottom-20 inset-x-4 z-50 hidden">
+<div id="install-banner" class="fixed bottom-24 z-50 hidden" style="left:50%;transform:translateX(-50%);width:min(100%,520px);padding:0 12px;">
   <div class="bg-gray-900 text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3 max-w-lg mx-auto">
     <div class="flex-1 min-w-0">
       <p class="font-semibold text-sm">Install Estimator</p>
@@ -777,6 +870,13 @@ const PENCIL = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stro
 const GEAR   = `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>`;
 const TRASH  = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>`;
 
+function renderBrandBlock() {
+  return `<div class="app-brand" aria-label="Spark Homes Repair Estimator">
+    <p class="app-brand-title">Spark Homes</p>
+    <p class="app-brand-sub">Repair Estimator</p>
+  </div>`;
+}
+
 function render() {
   document.getElementById('app').innerHTML = state.showSummary ? renderSummary() : renderMain();
   bindEvents();
@@ -788,54 +888,52 @@ function renderHeader() {
   const { total: totalItems, checked: checkedItems } = calcProgressUnits();
   const pct = totalItems === 0 ? 0 : Math.round(checkedItems / totalItems * 100);
   return `
-    <div class="bg-gray-900 text-white shadow-lg flex-shrink-0 pt-safe">
-      <div class="px-4 pt-2 pb-1 flex justify-between items-center">
-        <button data-action="open-panel" class="p-1 -ml-1 text-gray-400">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+    <div class="hero-total shadow-lg flex-shrink-0 pt-safe">
+      <div class="px-2 pt-1 pb-2 app-toolbar">
+        <button data-action="open-panel" class="touch-target text-gray-300">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
             <line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/>
           </svg>
         </button>
-        <div class="flex items-center gap-2">
-          <img src="Spark Group - Logo.png" alt="Spark Homes" class="h-6 object-contain" />
-          <p class="text-xs text-orange-400 font-semibold tracking-wide">REPAIR ESTIMATOR</p>
-        </div>
-        <div class="flex items-center gap-0.5">
-          <button data-action="open-settings" class="p-1 text-gray-400" title="Settings">${GEAR}</button>
-          <button data-action="export-excel" class="p-1 -mr-1 text-gray-400" title="Export to Excel">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        ${renderBrandBlock()}
+        <div class="app-toolbar-side">
+          <button data-action="open-settings" class="touch-target text-gray-300" title="Settings">${GEAR}</button>
+          <button data-action="export-excel" class="touch-target text-gray-300" title="Export">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
               <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
             </svg>
           </button>
         </div>
       </div>
-      <div class="px-4 pt-1 pb-4">
-        <p class="text-xs font-semibold tracking-widest uppercase text-orange-400">Running Total</p>
-        <p class="text-5xl font-bold mt-1 tabular-nums">${fmtTotal(total)}</p>
-        <div class="flex items-center gap-2 mt-1.5">
-          <p class="text-xs text-gray-400 truncate flex-1">${state.currentProjectName} · ${activeSections} active section${activeSections !== 1 ? 's' : ''}</p>
-          <button data-action="rename-project" class="flex-shrink-0 text-gray-500 p-0.5" title="Rename project">${PENCIL}</button>
+      <div class="hero-card">
+        <p class="text-xs font-bold tracking-widest uppercase text-orange-400">Running Total</p>
+        <p class="hero-amount mt-1 tabular-nums text-white">${fmtTotal(total)}</p>
+        <div class="flex items-center gap-2 mt-2">
+          <p class="text-sm text-gray-300 truncate flex-1">${state.currentProjectName}</p>
+          <button data-action="rename-project" class="touch-target text-gray-400 p-0" title="Rename">${PENCIL}</button>
         </div>
-        <div class="mt-2.5 flex items-center gap-3">
-          <div class="flex-1 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+        <div class="mt-3 flex items-center gap-3">
+          <div class="flex-1 h-2 bg-gray-700 rounded-full overflow-hidden">
             <div class="h-full bg-orange-500 rounded-full" style="width:${pct}%;transition:width 0.5s ease"></div>
           </div>
-          <span class="text-xs text-gray-500 flex-shrink-0 tabular-nums">${checkedItems}/${totalItems} groups</span>
+          <span class="text-xs text-gray-400 flex-shrink-0 tabular-nums">${checkedItems}/${totalItems}</span>
         </div>
+        <p class="text-xs text-gray-500 mt-2">${activeSections} active section${activeSections !== 1 ? 's' : ''}</p>
       </div>
     </div>`;
 }
 
 function renderCategoryTabs() {
-  return `<div class="bg-white border-b border-gray-200 scroll-x flex flex-shrink-0">
+  return `<div class="cat-pills scroll-x flex flex-shrink-0">
     ${CATEGORIES.map((cat, i) => {
       const active = i === state.currentCat;
       const total = calcCategoryTotal(cat);
       const count = checkedCount(cat);
+      const short = cat.name.replace('Appliances / ', '').replace('Living / Common', 'Living');
       return `<button data-action="switch-cat" data-index="${i}"
-        class="flex-none px-4 py-3 text-sm font-medium border-b-2 whitespace-nowrap ${active ? 'border-orange-500 text-orange-600 bg-orange-50' : 'border-transparent text-gray-500'}">
-        ${cat.name}
-        ${count > 0 ? `<span class="ml-1 text-xs ${active ? 'text-orange-500' : 'text-gray-400'}">${total > 0 ? fmtTotal(total) : count + ' ✓'}</span>` : ''}
+        class="cat-pill ${active ? 'active' : ''}">
+        ${short}${count > 0 ? `<span class="cat-pill-badge">${total > 0 ? fmtTotal(total) : count + '✓'}</span>` : ''}
       </button>`;
     }).join('')}
   </div>`;
@@ -845,18 +943,15 @@ function renderLineItem(item, stateId, grouped = false) {
   const id = stateId || item.id;
   const s = state.items[id] || { checked: false, qty: '', year: '' };
   const outerCls = grouped
-    ? `bg-slate-50 rounded-xl overflow-hidden border border-gray-100 ${s.checked ? 'ring-1 ring-orange-200' : ''}`
-    : `bg-white rounded-2xl mb-2.5 shadow-sm overflow-hidden ${s.checked ? 'ring-1 ring-orange-200' : ''}`;
+    ? `item-card ${s.checked ? 'checked' : ''} bg-slate-50 border border-gray-100`
+    : `item-card ${s.checked ? 'checked' : ''}`;
   if (item.noAction) return `
     <div data-item-card class="${outerCls}">
-      <div class="px-4 py-3">
-        <div class="flex gap-3 items-center">
-          <button data-action="toggle-item" data-id="${id}"
-            class="flex-shrink-0 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${s.checked ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'}">
-            ${s.checked ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
-          </button>
-          <p class="text-sm italic ${s.checked ? 'text-orange-500 font-medium' : 'text-gray-400'}">No action needed</p>
-        </div>
+      <div class="px-4 py-3 flex gap-3 items-center">
+        <button data-action="toggle-item" data-id="${id}" class="check-btn ${s.checked ? 'on' : ''}">
+          ${s.checked ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+        </button>
+        <p class="text-base ${s.checked ? 'text-orange-600 font-semibold' : 'text-gray-400 italic'}">No action needed</p>
       </div>
     </div>`;
   const total = calcItem(item, s, id);
@@ -888,35 +983,34 @@ function renderLineItem(item, stateId, grouped = false) {
     <div data-item-card class="${outerCls}">
       <div class="p-4">
         <div class="flex gap-3 items-start">
-          <button data-action="toggle-item" data-id="${id}"
-            class="flex-shrink-0 mt-0.5 w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${s.checked ? 'bg-orange-500 border-orange-500' : 'border-gray-300 bg-white'}">
-            ${s.checked ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
+          <button data-action="toggle-item" data-id="${id}" class="check-btn ${s.checked ? 'on' : ''}">
+            ${s.checked ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>` : ''}
           </button>
           <div class="flex-1 min-w-0">
-            <div class="flex justify-between gap-2 items-start">
-              <p class="font-semibold text-sm leading-snug ${s.checked ? 'text-gray-900' : 'text-gray-400'}">${item.name}${isCustom ? '<span class="text-orange-400 text-xs ml-1">(custom)</span>' : ''}</p>
-              <div class="flex items-center gap-1 flex-shrink-0">
-                <button data-action="edit-price" data-id="${id}" class="p-1 text-gray-300" title="Edit unit cost">${PENCIL}</button>
-                <button data-action="delete-item" data-id="${id}" data-item-id="${item.id}" class="p-1 text-gray-300" title="Remove item">${TRASH}</button>
-                <p class="font-bold text-base ${total > 0 ? 'text-orange-600' : 'text-gray-200'}">${total > 0 ? fmtTotal(total) : '—'}</p>
-              </div>
+            <div class="flex justify-between gap-2 items-start flex-wrap">
+              <p class="font-semibold text-base leading-snug flex-1 min-w-[140px] ${s.checked ? 'text-gray-900' : 'text-gray-400'}">${item.name}${isCustom ? '<span class="text-orange-500 text-xs ml-1">(custom)</span>' : ''}</p>
+              <p class="font-bold text-lg ${total > 0 ? 'text-orange-600' : 'text-gray-300'}">${total > 0 ? fmtTotal(total) : '—'}</p>
             </div>
-            <p class="text-xs text-gray-400 mt-0.5">${costLabel}${meta ? ` · ${meta}` : ''}</p>
+            <p class="text-sm text-gray-500 mt-1">${costLabel}${meta ? ` · ${meta}` : ''}</p>
+            <div class="flex gap-1 mt-2">
+              <button data-action="edit-price" data-id="${id}" class="touch-target text-gray-400 text-xs font-semibold px-2">Edit $</button>
+              <button data-action="delete-item" data-id="${id}" data-item-id="${item.id}" class="touch-target text-gray-400 text-xs font-semibold px-2">Remove</button>
+            </div>
             ${s.checked ? `
-              <div class="mt-3 flex flex-wrap gap-3 items-center">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm text-gray-500">Qty</span>
+              <div class="qty-row">
+                <div class="qty-field flex items-center gap-2">
+                  <label class="text-sm font-medium text-gray-600">Qty</label>
                   <input data-action="update-qty" data-id="${id}" type="number" value="${s.qty}"
                     min="0" step="any" inputmode="decimal" placeholder="0"
-                    class="border border-gray-200 rounded-xl px-3 py-2 w-32 text-right text-lg font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" />
-                  <span class="text-sm text-gray-400">${item.unit}</span>
+                    class="mobile-input flex-1 border-2 border-gray-200 rounded-xl px-3 py-2 text-right font-mono focus:outline-none focus:border-orange-400" />
+                  <span class="text-sm text-gray-500">${item.unit}</span>
                 </div>
                 ${item.hasYear ? `
                   <div class="flex items-center gap-2">
-                    <span class="text-sm text-gray-500">Year</span>
+                    <label class="text-sm font-medium text-gray-600">Year</label>
                     <input data-action="update-year" data-id="${id}" type="number" value="${s.year || ''}"
-                      min="1970" max="${new Date().getFullYear()}" inputmode="numeric" placeholder="e.g. 2015"
-                      class="border border-gray-200 rounded-xl px-3 py-2 w-28 text-center text-base font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent" />
+                      min="1970" max="${new Date().getFullYear()}" inputmode="numeric" placeholder="2015"
+                      class="mobile-input w-28 border-2 border-gray-200 rounded-xl px-3 py-2 text-center font-mono focus:outline-none focus:border-orange-400" />
                   </div>` : ''}
               </div>
               ${photoBlock}` : ''}
@@ -963,15 +1057,14 @@ function renderGroup(slot) {
     ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="18 15 12 9 6 15"/></svg>`
     : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="6 9 12 15 18 9"/></svg>`;
   return `
-    <div data-group-card data-gid="${gid}" class="bg-white rounded-2xl mb-2.5 shadow-sm overflow-hidden ${checkedInGroup > 0 ? 'ring-1 ring-orange-200' : ''}">
-      <button data-action="toggle-group" data-gid="${gid}"
-        class="w-full flex items-center justify-between px-4 py-3.5 text-left">
-        <div class="flex items-center gap-2.5 min-w-0">
+    <div data-group-card data-gid="${gid}" class="group-card ${checkedInGroup > 0 ? 'ring-2 ring-orange-100' : ''}">
+      <button data-action="toggle-group" data-gid="${gid}" class="group-head">
+        <div class="flex items-center gap-3 min-w-0">
           <span class="text-gray-400 flex-shrink-0">${chevron}</span>
-          <span class="font-semibold text-sm text-gray-800">${label}</span>
-          ${checkedInGroup > 0 ? `<span class="text-xs px-2 py-0.5 bg-orange-100 text-orange-600 rounded-full font-medium flex-shrink-0">${checkedInGroup} ✓</span>` : ''}
+          <span class="font-bold text-base text-gray-800">${label}</span>
+          ${checkedInGroup > 0 ? `<span class="text-xs px-2.5 py-1 bg-orange-100 text-orange-700 rounded-full font-bold">${checkedInGroup} ✓</span>` : ''}
         </div>
-        <span data-group-total class="font-bold text-base flex-shrink-0 ml-2 ${groupTotal > 0 ? 'text-orange-600' : 'text-gray-200'}">${groupTotal > 0 ? fmtTotal(groupTotal) : '—'}</span>
+        <span data-group-total class="font-bold text-lg flex-shrink-0 ml-2 ${groupTotal > 0 ? 'text-orange-600' : 'text-gray-300'}">${groupTotal > 0 ? fmtTotal(groupTotal) : '—'}</span>
       </button>
       ${isExpanded ? `<div class="border-t border-gray-100 px-3 pb-3 pt-2 space-y-2">
         ${entries.map(e => renderLineItem(e.item, e.stateId, true)).join('')}
@@ -983,22 +1076,20 @@ function renderRoomSubTabs(cat) {
   const roomType = cat.roomType;
   const instances = state.roomInstances[roomType];
   const current = state.currentRoom[roomType];
-  const label = roomType === 'bathroom' ? 'Bathroom' : roomType === 'bedroom' ? 'Bedroom' : 'Room';
-  return `<div class="bg-white border-b border-gray-200 scroll-x flex items-stretch flex-shrink-0">
+  return `<div class="room-chips scroll-x flex flex-shrink-0">
     ${instances.map((room, i) => {
       const active = i === current;
       const rt = calcRoomTotal(cat, room);
       const rc = cat.items.filter(item => state.items[roomKey(roomType, room.id, item.id)]?.checked).length;
-      return `<div class="flex-none flex items-center border-b-2 ${active ? 'border-orange-500 bg-orange-50' : 'border-transparent'}">
-        <button data-action="switch-room" data-room-type="${roomType}" data-index="${i}"
-          class="pl-3 py-2.5 text-sm font-medium whitespace-nowrap ${active ? 'text-orange-700' : 'text-gray-500'}">
-          ${room.name}${rc > 0 ? `<span class="ml-1 text-xs ${active ? 'text-orange-500' : 'text-gray-400'}">${rt > 0 ? fmtTotal(rt) : rc + ' ✓'}</span>` : ''}
+      return `<div class="room-chip ${active ? 'active' : ''}">
+        <button data-action="switch-room" data-room-type="${roomType}" data-index="${i}" class="room-chip-btn">
+          ${room.name}${rc > 0 ? ` · ${rt > 0 ? fmtTotal(rt) : rc + '✓'}` : ''}
         </button>
-        <button data-action="edit-room-name" data-room-type="${roomType}" data-index="${i}" class="px-2 py-2.5 ${active ? 'text-orange-400' : 'text-gray-300'}">${PENCIL}</button>
-        ${instances.length > 1 ? `<button data-action="remove-room" data-room-type="${roomType}" data-index="${i}" class="pr-2 py-2.5 ${active ? 'text-red-300' : 'text-gray-200'}">${TRASH}</button>` : ''}
+        <button data-action="edit-room-name" data-room-type="${roomType}" data-index="${i}" class="touch-target text-gray-400 px-1">${PENCIL}</button>
+        ${instances.length > 1 ? `<button data-action="remove-room" data-room-type="${roomType}" data-index="${i}" class="touch-target text-red-400 px-1">${TRASH}</button>` : ''}
       </div>`;
     }).join('')}
-    <button data-action="add-room" data-room-type="${roomType}" class="flex-none px-4 py-2.5 text-sm font-semibold text-orange-500 border-b-2 border-transparent whitespace-nowrap">+ Add</button>
+    <button data-action="add-room" data-room-type="${roomType}" class="cat-pill flex items-center px-4 text-orange-600 font-bold">+ Add</button>
   </div>`;
 }
 
@@ -1011,41 +1102,37 @@ function renderCategoryView() {
     const slots = buildSlots(cat, room.id);
     return `<div>
       ${renderRoomSubTabs(cat)}
-      <div class="px-4 pt-4">
+      <div class="content-pad">
         <div class="flex justify-between items-center mb-3">
-          <p class="text-xs font-bold uppercase tracking-widest text-gray-400">${room.name}</p>
-          <p class="text-xs text-gray-400">${bc} selected</p>
+          <p class="section-label">${room.name}</p>
+          <p class="text-xs text-gray-500">${bc} selected</p>
         </div>
         ${slots.map(slot => slot.type === 'group' ? renderGroup(slot) : renderLineItem(slot.item, slot.stateId)).join('')}
-        <button data-action="add-custom-item" data-cat-id="${cat.id}" data-room-id="${room.id}"
-          class="w-full mt-2 py-3 rounded-xl border-2 border-dashed border-orange-200 text-orange-500 font-semibold text-sm">+ Add Line Item</button>
-        <div class="h-2"></div>
+        <button data-action="add-custom-item" data-cat-id="${cat.id}" data-room-id="${room.id}" class="add-item-btn mt-2">+ Add Line Item</button>
       </div>
     </div>`;
   }
   const slots = buildSlots(cat, null);
-  return `<div class="px-4 pt-4">
+  return `<div class="content-pad">
     <div class="flex justify-between items-center mb-3">
-      <p class="text-xs font-bold uppercase tracking-widest text-gray-400">${cat.name}</p>
-      <p class="text-xs text-gray-400">${checkedCount(cat)} selected</p>
+      <p class="section-label">${cat.name}</p>
+      <p class="text-xs text-gray-500">${checkedCount(cat)} selected</p>
     </div>
     ${slots.map(slot => slot.type === 'group' ? renderGroup(slot) : renderLineItem(slot.item, slot.stateId)).join('')}
-    <button data-action="add-custom-item" data-cat-id="${cat.id}"
-      class="w-full mt-2 py-3 rounded-xl border-2 border-dashed border-orange-200 text-orange-500 font-semibold text-sm">+ Add Line Item</button>
-    <div class="h-2"></div>
+    <button data-action="add-custom-item" data-cat-id="${cat.id}" class="add-item-btn mt-2">+ Add Line Item</button>
   </div>`;
 }
 
 function renderBottomNav() {
   const isFirst = state.currentCat === 0;
   const isLast  = state.currentCat === CATEGORIES.length - 1;
-  return `<div class="fixed bottom-0 inset-x-0 bg-white border-t border-gray-100 px-4 pt-3 safe-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-    <div class="flex gap-3 max-w-lg mx-auto">
+  return `<div class="bottom-nav">
+    <div class="flex gap-3">
       <button data-action="prev-cat" ${isFirst ? 'disabled' : ''}
-        class="flex-1 py-3.5 rounded-2xl border-2 border-orange-500 text-orange-600 font-semibold text-sm ${isFirst ? 'opacity-25 cursor-not-allowed' : ''}">← Previous</button>
+        class="nav-btn nav-btn-secondary ${isFirst ? '' : ''}">← Back</button>
       ${!isLast
-        ? `<button data-action="next-cat" class="flex-1 py-3.5 rounded-2xl bg-orange-500 text-white font-semibold text-sm">Next →</button>`
-        : `<button data-action="show-summary" class="flex-1 py-3.5 rounded-2xl bg-orange-500 text-white font-semibold text-sm">View Summary</button>`}
+        ? `<button data-action="next-cat" class="nav-btn nav-btn-primary">Next →</button>`
+        : `<button data-action="show-summary" class="nav-btn nav-btn-primary">Summary ✓</button>`}
     </div>
   </div>`;
 }
@@ -1054,7 +1141,7 @@ function renderMain() {
   return `<div class="min-h-screen flex flex-col">
     ${renderHeader()}
     ${renderCategoryTabs()}
-    <div class="flex-1 scroll-y pb-28" id="scroll-area">${renderCategoryView()}</div>
+    <div class="flex-1 scroll-y" id="scroll-area">${renderCategoryView()}</div>
     ${renderBottomNav()}
   </div>`;
 }
@@ -1111,17 +1198,19 @@ function renderSummary() {
 
   return `<div class="min-h-screen bg-slate-100">
     <div class="bg-gray-900 text-white pt-safe">
-      <div class="px-4 pt-2 pb-1 flex justify-between items-center">
-        <button data-action="back-to-edit" class="text-orange-400 text-sm flex items-center gap-1">
+      <div class="px-3 pt-1 pb-1 app-toolbar">
+        <button data-action="back-to-edit" class="touch-target text-orange-400 text-sm font-semibold flex items-center gap-1">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>Back
         </button>
-        <img src="Spark Group - Logo.png" alt="Spark" class="h-5 object-contain" />
-        <button data-action="export-excel" class="p-1 text-gray-400" title="Export to Excel">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
-            <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
-          </svg>
-        </button>
+        ${renderBrandBlock()}
+        <div class="app-toolbar-side">
+          <button data-action="export-excel" class="touch-target text-gray-300" title="Export to Excel">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>
+              <line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/>
+            </svg>
+          </button>
+        </div>
       </div>
       <div class="px-4 pt-1 pb-6">
         <p class="text-xs font-semibold tracking-widest uppercase text-orange-400">Total Estimate</p>

@@ -4,9 +4,16 @@ Mobile-first Progressive Web App for on-site property repair cost estimation. Bu
 
 ## Live Demo
 
-Deploy to GitHub Pages (Settings → Pages → GitHub Actions), then visit:
+After pushing, enable GitHub Pages:
 
-`https://<your-username>.github.io/Repair-Estimator-Challenge-/`
+1. Go to **Settings → Pages**
+2. Under **Build and deployment**, set **Source** to **Deploy from a branch**
+3. Choose branch **`gh-pages`** and folder **`/ (root)`**
+4. Save — your app will be live at:
+
+`https://isjustabhi.github.io/Repair-Estimator-Challenge-/`
+
+The deploy workflow runs automatically on every push to `main`.
 
 ## Run Locally
 
