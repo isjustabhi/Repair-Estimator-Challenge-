@@ -63,13 +63,3 @@ Single-page vanilla JavaScript app with static assets. Data model centers on:
 | `Spark Group - Logo.png` | Branding |
 | `Submission Writeup.pdf` | Contest writeup |
 | `Example App.html` | Reference only (not submitted) |
-
-## Submit
-
-Email James@sparkequitygroup.com with:
-
-1. Link to hosted app (GitHub Pages)
-2. GitHub repo link
-3. `Submission Writeup.pdf`
-
-**Deadline: July 14, 2026**
